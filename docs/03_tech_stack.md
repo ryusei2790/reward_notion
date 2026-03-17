@@ -3,7 +3,7 @@
 ## 選定方針
 
 - モダンなReactエコシステムで実装経験を積む
-- next.jsでルーディングを制御、PGliteでローカルデータベース
+- next.jsでルーティングを制御、PGlite（WASM版PostgreSQL）でブラウザ内データベース（IndexedDB に永続化）
 - 型安全なTypeScriptで保守性を確保
 
 ---
@@ -26,7 +26,7 @@
 | @dnd-kit/core | ドラッグ&ドロップ | アクセシビリティ対応・Reactフレンドリーな設計 |
 | @dnd-kit/sortable | リスト並び替え | dnd-kitのソータブル拡張 |
 | canvas-confetti | ご褒美アニメーション | 軽量で導入が容易。ブラウザネイティブなアニメーション |
-| localStorage API | ご褒美・パターン・進捗のデータ永続化 | ブラウザ標準API。ライブラリ不要
+| @electric-sql/pglite | ブラウザ内データベース（IndexedDB への永続化） | WASM版PostgreSQL。SQLでデータ操作が可能。ライブラリ不要なlocalStorageと違いスキーマ管理・型安全なクエリが書ける
 | shadcn/ui| UI、データテーブル、見た目全般 |　コンポーネントとしてすでに揃っていてハードコードでデザインをする必要がないから
 
 ### インフラ / デプロイ
@@ -46,7 +46,7 @@ Browser
         ├── App Router
         ├── Client Components（インタラクション・dnd-kit）
         ├── AppContext（データ統合管理）
-        ├── localStorage（ご褒美・パターン・進捗）
+        ├── PGlite（IndexedDB）（ご褒美・パターン・進捗・タスクキャッシュ）
         └── Notion API（タスク取得・完了同期）
                 │
                 ▼
@@ -62,10 +62,9 @@ Browser
 rewardo/
 ├── src/
 │   ├── app/
-│   │   ├── home/page.tsx               # ホーム（タスク一覧）
+│   │   ├── page.tsx                    # ホーム（タスク一覧）
 │   │   ├── reward-settings/page.tsx    # ご褒美設定・Notion連携情報入力
-│   │   ├── layout.tsx                  # ルートレイアウト
-│   │   └── page.tsx                    # ルートリダイレクト
+│   │   └── layout.tsx                  # ルートレイアウト
 │   ├── components/
 │   │   ├── layout/
 │   │   │   └── Header.tsx              # ヘッダー
@@ -102,4 +101,4 @@ rewardo/
 NOTION_API_KEY=your_notion_integration_token
 ```
 
-> `NOTION_PAGE_ID` はユーザーがアプリ内のご褒美設定ページから入力して localStorage に保存する（環境変数ではなくユーザー設定値として管理）。
+> `NOTION_API_KEY` および `NOTION_PAGE_ID` はどちらもユーザーがアプリ内のご褒美設定ページから入力して localStorage に保存する（環境変数ではなくユーザー設定値として管理）。Next.js の API Route はリクエストボディ経由でこれらの値を受け取って Notion API を呼び出す。`.env.local` は開発時の動作確認用途に限定して使用する。
