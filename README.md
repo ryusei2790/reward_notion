@@ -1,36 +1,185 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rewardo
 
-## Getting Started
+> タスクを完了するたびに「ご褒美ガチャ」が引けるモチベーション管理アプリ
 
-First, run the development server:
+スロットマシンと同じ「いつ当たるかわからない」仕組みで、自然にタスクを続けたくなります。
+Notion の Todo と連携して、既存のタスクをそのまま使えます。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+---
+
+## スクリーンショット
+
+| ホーム画面 | ご褒美発動 | ご褒美設定 |
+|-----------|-----------|-----------|
+| タスク一覧・同期 | confetti + ご褒美表示 | ご褒美・パターン登録 |
+
+---
+
+## 機能
+
+- **Notion 同期** — 指定した Notion ページの Todo を取得・表示
+- **タスク完了** — チェックを入れると Notion 側も自動で更新
+- **ドラッグ並び替え** — タスクの表示順を自由に変更
+- **ご褒美ガチャ** — 一定数タスクを完了するとランダムにご褒美が出る
+- **加重抽選** — ご褒美に重みを設定して出やすさを調整
+- **ログイン不要** — データはすべてブラウザ内（IndexedDB）に保存
+
+---
+
+## セットアップ
+
+### 1. Notion Integration を作成する
+
+1. [https://www.notion.so/my-integrations](https://www.notion.so/my-integrations) を開く
+2. **「新しいインテグレーション」** をクリック
+3. 名前を入力（例: `Rewardo`）してワークスペースを選択 → **送信**
+4. 表示された **「Internal Integration Secret」** をコピーしておく
+   - `secret_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx` という形式
+
+### 2. Notion ページにインテグレーションを接続する
+
+1. 同期したい Notion ページを開く
+2. 右上の **「...」** メニュー → **「コネクト」**
+3. 手順 1 で作成したインテグレーション名を選択して接続
+
+### 3. Page ID を確認する
+
+ページの URL から Page ID を取得します。
+
+```
+https://www.notion.so/ページ名-3265e595c6c880f5a32cc8ccf0e5bdfb
+                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                  この32文字が Page ID
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> ページ名の後ろのハイフン以降、`?` より前の32文字です。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 起動方法
 
-## Learn More
+```bash
+# リポジトリをクローン
+git clone <repository-url>
+cd reward_notion
 
-To learn more about Next.js, take a look at the following resources:
+# 依存パッケージをインストール
+npm install
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# 開発サーバーを起動
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+ブラウザで [http://localhost:3000](http://localhost:3000) を開く。
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 初回設定
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### ご褒美設定ページ（`/reward-settings`）で行う
+
+#### Notion 連携の設定
+
+1. ヘッダーの **「ご褒美設定」** をクリック
+2. **Notion API Key** に `secret_...` のトークンを入力
+3. **Notion Page ID** に手順 3 で確認した 32 文字を入力
+4. **「保存」** をクリック
+
+#### ご褒美を登録する
+
+| 項目 | 説明 |
+|------|------|
+| ご褒美の内容 | 例：「チョコを食べる」「10分休憩する」 |
+| 重み（1〜10） | 数値が大きいほど出やすい。10は1の10倍出やすい |
+
+「追加」ボタンで登録。複数登録するほど抽選が楽しくなります。
+
+#### ご褒美パターンを登録する
+
+「何タスク完了したらご褒美を出すか」の範囲を設定します。
+
+| 例 | 意味 |
+|----|------|
+| 最小 3 〜 最大 5 | 3・4・5 のどれかのタスク数で出る |
+| 最小 1 〜 最大 1 | 毎回ご褒美が出る（練習用） |
+| 最小 5 〜 最大 10 | 5〜10 タスク完了でご褒美 |
+
+複数パターンを登録するとその中からランダムに選ばれます。
+
+---
+
+## 使い方
+
+### タスクを同期する
+
+1. ヘッダーの **「タスク」** をクリックしてホームに戻る
+2. 右上の **「Notion 同期」** ボタンをクリック
+3. Notion ページの Todo が取得されて一覧に表示される
+
+### タスクを完了する
+
+- チェックボックスをクリックすると完了済みになる
+- 完了済みタスクは下部に薄く表示される
+- Notion 側の Todo も自動でチェックが入る
+
+### タスクを並び替える
+
+- 各タスク左端の **「⠿」** アイコンをドラッグして並び替え
+
+### ご褒美が出るとき
+
+- ヘッダーの進捗バーが伸びていく
+- 設定した目標数に達すると confetti アニメーション + ご褒美が表示される
+- 「閉じる」を押すと次のご褒美目標数が自動で再抽選される
+
+---
+
+## ご褒美のしくみ
+
+```
+1. タスク完了 → done_count が +1 される
+2. done_count が target_count に達したらご褒美発動
+3. target_count の決め方：
+   - 登録したパターンからランダムに 1 つ選ぶ
+   - そのパターンの min〜max でランダムな整数を設定
+   例）パターン「3〜5」→ 3, 4, 5 のどれか
+4. ご褒美の選び方：
+   - 登録したご褒美を weight（重み）に応じた加重抽選
+   例）重み3のご褒美は重み1の3倍出やすい
+5. ご褒美表示後に done_count をリセット → 次の target_count を再抽選
+```
+
+この「いつ出るかわからない」ランダム性が、行動経済学の**変動比率強化スケジュール**に基づいてモチベーションを持続させます。
+
+---
+
+## データの保存先
+
+| データ | 保存先 |
+|-------|-------|
+| タスク（Notion キャッシュ） | ブラウザ内 IndexedDB（PGlite） |
+| ご褒美・パターン | ブラウザ内 IndexedDB（PGlite） |
+| 進捗（done_count） | ブラウザ内 IndexedDB（PGlite） |
+| Notion API Key / Page ID | ブラウザ内 IndexedDB（PGlite） |
+
+> ブラウザのデータを消去するとすべてのデータが失われます。
+
+---
+
+## 技術スタック
+
+| 技術 | 用途 |
+|------|------|
+| Next.js 14（App Router） | フレームワーク |
+| TypeScript | 型安全な実装 |
+| Tailwind CSS | スタイリング |
+| PGlite（WASM PostgreSQL） | ブラウザ内データベース（IndexedDB 永続化） |
+| dnd-kit | ドラッグ&ドロップ並び替え |
+| canvas-confetti | ご褒美アニメーション |
+| @notionhq/client | Notion API |
+
+---
+
+## ライセンス
+
+MIT
