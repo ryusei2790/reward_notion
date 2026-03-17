@@ -104,7 +104,12 @@ export async function getTasks(): Promise<Task[]> {
   const result = await db.query<Task>(
     "SELECT * FROM tasks ORDER BY position ASC"
   );
-  return result.rows;
+  // PGlite の BOOLEAN は JS の true/false で返るが、念のため正規化
+  return result.rows.map((row) => ({
+    ...row,
+    is_done: Boolean(row.is_done),
+    position: Number(row.position),
+  }));
 }
 
 /** タスクを一括 UPSERT（Notion 同期時に使用） */
@@ -209,11 +214,16 @@ export async function deleteRewardPattern(id: string): Promise<void> {
 
 export async function getProgress(): Promise<Progress> {
   const db = await getDb();
-  const result = await db.query<Progress & { id: number }>(
+  const result = await db.query<{ id: number; done_count: number; target_count: number }>(
     "SELECT * FROM progress WHERE id = 1"
   );
   const row = result.rows[0];
-  return { done_count: row.done_count, target_count: row.target_count };
+  // initSchema で挿入済みのはずだが、念のためフォールバック
+  if (!row) return { done_count: 0, target_count: 5 };
+  return {
+    done_count: Number(row.done_count ?? 0),
+    target_count: Number(row.target_count ?? 5),
+  };
 }
 
 export async function updateProgress(progress: Progress): Promise<void> {
@@ -230,11 +240,12 @@ export async function updateProgress(progress: Progress): Promise<void> {
 
 export async function getNotionSettings(): Promise<NotionSettings> {
   const db = await getDb();
-  const result = await db.query<NotionSettings & { id: number }>(
+  const result = await db.query<{ id: number; api_key: string; page_id: string }>(
     "SELECT * FROM notion_settings WHERE id = 1"
   );
   const row = result.rows[0];
-  return { api_key: row.api_key, page_id: row.page_id };
+  if (!row) return { api_key: "", page_id: "" };
+  return { api_key: row.api_key ?? "", page_id: row.page_id ?? "" };
 }
 
 export async function updateNotionSettings(
