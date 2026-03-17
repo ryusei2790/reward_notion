@@ -2,95 +2,98 @@
 
 ## 概要
 
-Firebase Firestore（NoSQL）を使用。
-ユーザーごとのサブコレクション構造で データを分離し、Security Rules でアクセス制御を行う。
+認証なし・ローカルストレージのみを使用。
+ブラウザの `localStorage` にすべてのデータを保存する。サーバーサイドDBは使用しない。
 
 ```
-users/{uid}/
-  ├── notionapi 
-  |-- notion page_id
-  |--notion todo id
-  ├── rewards/{rewardId}
-  ├── reward_patterns/{patternId}
-  └── progress/current
+localStorage
+  ├── "tasks"           → Task[]
+  ├── "rewards"         → Reward[]
+  ├── "reward_patterns" → RewardPattern[]
+  ├── "progress"        → Progress
+  └── "notion_settings" → NotionSettings
 ```
 
 ---
 
-## コレクション一覧
+## データ構造一覧
 
-### `users/{uid}/tasks/{taskId}`
+### `tasks`（キー: `"tasks"`）
 
-ユーザーのタスクを管理する。
+Notion から取得・キャッシュしたタスク一覧。
 
 | フィールド | 型 | デフォルト | 説明 |
 |-----------|-----|-----------|------|
-| id | string | auto（ドキュメントID） | PK |
+| id | string | uuid | PK（ローカル管理用） |
+| block_id | string | - | Notion の todo ブロック ID |
 | title | string | - | タスク名 |
 | is_done | boolean | false | 完了フラグ |
 | position | number | - | 表示順（並び替えに使用） |
-| created_at | timestamp | serverTimestamp() | 作成日時 |
 
 ```json
-// users/{uid}/tasks/{taskId}
-{
-  "title": "英単語を10個覚える",
-  "is_done": false,
-  "position": 0,
-  "created_at": "<Timestamp>",
-  "block_id": "notionのブロックid"
-}
+// localStorage["tasks"]
+[
+  {
+    "id": "local-uuid-xxx",
+    "block_id": "notion-block-id-xxx",
+    "title": "英単語を10個覚える",
+    "is_done": false,
+    "position": 0
+  }
+]
 ```
 
 ---
 
-### `users/{uid}/rewards/{rewardId}`
+### `rewards`（キー: `"rewards"`）
 
-ユーザーが登録したご褒美を管理する。
+ユーザーが登録したご褒美一覧。
 
 | フィールド | 型 | デフォルト | 説明 |
 |-----------|-----|-----------|------|
-| id | string | auto（ドキュメントID） | PK |
+| id | string | uuid | PK |
 | content | string | - | ご褒美の内容（例：「チョコ食べる」） |
 | weight | number | 1 | 出やすさの重み（1〜10） |
-| created_at | timestamp | serverTimestamp() | 作成日時 |
 
 ```json
-// users/{uid}/rewards/{rewardId}
-{
-  "content": "チョコ食べる",
-  "weight": 3,
-  "created_at": "<Timestamp>"
-}
+// localStorage["rewards"]
+[
+  {
+    "id": "uuid-yyy",
+    "content": "チョコ食べる",
+    "weight": 3
+  }
+]
 ```
 
 ---
 
-### `users/{uid}/reward_patterns/{patternId}`
+### `reward_patterns`（キー: `"reward_patterns"`）
 
-ご褒美が出るタスク完了数の「幅」をパターンとして管理する。
+ご褒美が出るタスク完了数の「幅」パターン一覧。
 
 | フィールド | 型 | デフォルト | 説明 |
 |-----------|-----|-----------|------|
-| id | string | auto（ドキュメントID） | PK |
+| id | string | uuid | PK |
 | min_count | number | - | 最小タスク完了数 |
 | max_count | number | - | 最大タスク完了数 |
-| created_at | timestamp | serverTimestamp() | 作成日時 |
 
 ```json
-// users/{uid}/reward_patterns/{patternId}
-{
-  "min_count": 3,
-  "max_count": 5,
-  "created_at": "<Timestamp>"
-}
+// localStorage["reward_patterns"]
+[
+  {
+    "id": "uuid-zzz",
+    "min_count": 3,
+    "max_count": 5
+  }
+]
 ```
 
 ---
 
-### `users/{uid}/progress/current`
+### `progress`（キー: `"progress"`）
 
-ユーザーごとの現在の完了カウントと目標数を管理する（固定ドキュメント）。
+現在の完了カウントと目標数（単一オブジェクト）。
 
 | フィールド | 型 | デフォルト | 説明 |
 |-----------|-----|-----------|------|
@@ -98,7 +101,7 @@ users/{uid}/
 | target_count | number | 5 | 次のご褒美までの目標数 |
 
 ```json
-// users/{uid}/progress/current
+// localStorage["progress"]
 {
   "done_count": 2,
   "target_count": 4
@@ -107,18 +110,37 @@ users/{uid}/
 
 ---
 
-## コレクション階層図
+### `notion_settings`（キー: `"notion_settings"`）
+
+ユーザーが入力した Notion 連携情報。
+
+| フィールド | 型 | デフォルト | 説明 |
+|-----------|-----|-----------|------|
+| page_id | string | "" | Notion ページ ID |
+
+```json
+// localStorage["notion_settings"]
+{
+  "page_id": "notion-page-id-xxx"
+}
+```
+
+> `NOTION_API_KEY` は `.env.local` で管理し、Next.js の API Route 経由でのみ使用する。
+
+---
+
+## データ構造図
 
 ```
-Firestore
-└── users/
-    └── {uid}/
-        ├── tasks/
-        │   └── {taskId}  { title, is_done, position, created_at }
-        ├── rewards/
-        │   └── {rewardId}  { content, weight, created_at }
-        ├── reward_patterns/
-        │   └── {patternId}  { min_count, max_count, created_at }
-        └── progress/
-            └── current  { done_count, target_count }
+localStorage
+├── "tasks"
+│   └── Task[]  { id, block_id, title, is_done, position }
+├── "rewards"
+│   └── Reward[]  { id, content, weight }
+├── "reward_patterns"
+│   └── RewardPattern[]  { id, min_count, max_count }
+├── "progress"
+│   └── Progress  { done_count, target_count }
+└── "notion_settings"
+    └── NotionSettings  { page_id }
 ```
