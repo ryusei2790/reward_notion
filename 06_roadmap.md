@@ -5,8 +5,8 @@
 ### Phase 1：プロジェクト初期化
 
 - [ ] `create-next-app` でプロジェクト作成（TypeScript・Tailwind・App Router）
-- [ ] 必要パッケージのインストール（dnd-kit / canvas-confetti / shadcn/ui）
-- [ ] `.env.local` の設定（Notion API Key・Page ID）
+- [ ] 必要パッケージのインストール（@dnd-kit/core / @dnd-kit/sortable / canvas-confetti / shadcn/ui / @notionhq/client）
+- [ ] `.env.local` の設定（`NOTION_API_KEY` / `NOTION_PAGE_ID`）
 - [ ] Vercel プロジェクト作成・GitHub連携
 
 ### Phase 2：Notion連携基盤
@@ -18,9 +18,9 @@
 
 ### Phase 3：ローカルストレージ基盤
 
-- [ ] `lib/storage.ts` 実装：タスク・ご褒美・パターン・進捗のCRUD
+- [ ] `lib/localStorage.ts` 実装：タスク・ご褒美・パターン・進捗の CRUD
 - [ ] Notion から取得したタスクをローカルストレージにキャッシュする設計を決定
-- [ ] `ご褒美設定ページ` の設定データ（rewards / reward_patterns / progress）はローカルストレージに保存
+- [ ] ご褒美設定データ（rewards / reward_patterns / progress）はローカルストレージに保存
 
 ### Phase 4：ホーム画面 - タスク同期・表示
 
