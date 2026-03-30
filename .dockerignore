@@ -1,0 +1,11 @@
+# Dockerイメージのビルドから除外するファイル
+# これによりビルドコンテキストが軽量になる
+
+node_modules
+.next
+.git
+.gitignore
+*.md
+.env*
+.DS_Store
+npm-debug.log*

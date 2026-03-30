@@ -21,6 +21,7 @@ export function SyncButton() {
     if (!hasSettings) {
       setError("ご褒美設定ページで Notion API キーとページ ID を設定してください");
       return;
+      // ここでNotionAPIとページIDの取得の仕方を説明するページへのリンクを出したい
     }
     setLoading(true);
     setError(null);

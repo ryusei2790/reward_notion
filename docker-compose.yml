@@ -1,0 +1,17 @@
+# 開発環境用 docker-compose
+# `docker compose up` で Next.js 開発サーバーが http://localhost:3000 で起動する
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      # ソースコードをホストとコンテナで共有（ホットリロード対応）
+      - .:/app
+      # node_modules はコンテナ内のものを使う（ホストのもので上書きされないようにする）
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      # Next.js のホットリロードを Docker 環境で有効にする
+      - WATCHPACK_POLLING=true
