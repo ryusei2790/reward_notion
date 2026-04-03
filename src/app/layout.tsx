@@ -8,6 +8,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
 import { AppProvider } from "@/contexts/AppContext";
+import { GoogleAnalytics } from "@/components/analytics/GoogleAnalytics";
 import { Header } from "@/components/layout/Header";
 import { RewardModal } from "@/components/reward/RewardModal";
 
@@ -29,6 +30,7 @@ export default function RootLayout({
   return (
     <html lang="ja" className="dark">
       <body className={`${geist.variable} bg-zinc-950 font-sans text-zinc-100 antialiased`}>
+        <GoogleAnalytics />
         <AppProvider>
           <Header />
           <main className="mx-auto max-w-3xl px-4 py-8">{children}</main>
