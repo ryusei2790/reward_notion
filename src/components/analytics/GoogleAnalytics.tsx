@@ -1,7 +1,6 @@
 "use client";
 
 import Script from "next/script";
-import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
 declare global {
@@ -14,23 +13,48 @@ declare global {
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
 export function GoogleAnalytics() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
   useEffect(() => {
     if (!GA_MEASUREMENT_ID || typeof window.gtag !== "function") {
       return;
     }
 
-    const query = searchParams.toString();
-    const pagePath = query ? `${pathname}?${query}` : pathname;
+    const trackPageView = () => {
+      window.gtag("event", "page_view", {
+        page_path: `${window.location.pathname}${window.location.search}`,
+        page_location: window.location.href,
+        page_title: document.title,
+      });
+    };
 
-    window.gtag("event", "page_view", {
-      page_path: pagePath,
-      page_location: window.location.href,
-      page_title: document.title,
-    });
-  }, [pathname, searchParams]);
+    trackPageView();
+
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
+
+    const dispatchLocationChange = () => {
+      window.dispatchEvent(new Event("locationchange"));
+    };
+
+    window.history.pushState = function (...args) {
+      originalPushState.apply(window.history, args);
+      dispatchLocationChange();
+    };
+
+    window.history.replaceState = function (...args) {
+      originalReplaceState.apply(window.history, args);
+      dispatchLocationChange();
+    };
+
+    window.addEventListener("popstate", dispatchLocationChange);
+    window.addEventListener("locationchange", trackPageView);
+
+    return () => {
+      window.history.pushState = originalPushState;
+      window.history.replaceState = originalReplaceState;
+      window.removeEventListener("popstate", dispatchLocationChange);
+      window.removeEventListener("locationchange", trackPageView);
+    };
+  }, []);
 
   if (!GA_MEASUREMENT_ID) {
     return null;
