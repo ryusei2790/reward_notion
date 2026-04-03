@@ -156,6 +156,20 @@ npm run dev
 
 [http://localhost:3000](http://localhost:3000) でアクセスできます。
 
+### Google Analytics を使う場合
+
+GA4 の測定 ID を `.env.local` に設定すると、全ページで `page_view` を送信します。
+
+```bash
+cp .env.example .env.local
+```
+
+`.env.local`
+
+```bash
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+```
+
 ---
 
 ## ⚙️ 初回設定
